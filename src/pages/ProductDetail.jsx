@@ -1,16 +1,31 @@
+
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
-import products from "../data/products";
+import { useEffect, useState } from "react";
+import { getProducts } from "../api/products";
 
 function ProductDetail({ addToCart }) {
-
   const { id } = useParams();
 
-  const product = products.find(
-    (item) => item.id === Number(id)
-  );
-
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    getProducts()
+      .then((products) => {
+        const selected = products.find(
+          (item) => String(item.id) === String(id)
+        );
+
+        setProduct(selected || null);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, [id]);
+
+  if (loading) {
+    return <div className="empty-page">Loading product...</div>;
+  }
 
   if (!product) {
     return (
@@ -23,13 +38,11 @@ function ProductDetail({ addToCart }) {
 
   return (
     <section className="detail-container">
-
       <div className="detail-image">
         <img src={product.image} alt={product.name} />
       </div>
 
       <div className="detail-info">
-
         <p className="hero-tag">{product.category}</p>
 
         <h1>{product.name}</h1>
@@ -38,7 +51,9 @@ function ProductDetail({ addToCart }) {
           Rs. {product.price.toLocaleString()}
         </div>
 
-        <del>Rs. {product.oldPrice.toLocaleString()}</del>
+        <del>
+          Rs. {product.oldPrice.toLocaleString()}
+        </del>
 
         <p className="detail-description">
           {product.description}
@@ -48,7 +63,9 @@ function ProductDetail({ addToCart }) {
 
         <div className="quantity">
           <button
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            onClick={() =>
+              setQuantity(Math.max(1, quantity - 1))
+            }
           >
             -
           </button>
@@ -70,9 +87,7 @@ function ProductDetail({ addToCart }) {
         <Link to="/cart" className="back-link">
           Go to Shopping Cart →
         </Link>
-
       </div>
-
     </section>
   );
 }
